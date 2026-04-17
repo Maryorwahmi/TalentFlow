@@ -1,0 +1,30 @@
+{
+  "name": "talent-flow-be2-learning-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "BE-2 learning core implementation for Talent Flow",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:init": "node --env-file=.env src/unified/mysql-exec.mjs \"{\\\"type\\\":\\\"init\\\"}\"",
+    "test": "node --env-file=.env.test tests/auth.test.js && node --env-file=.env.test tests/validators.test.js && node --env-file=.env.test tests/docs.test.js && node --env-file=.env.test tests/migrations.test.js && node --env-file=.env.test tests/services.test.js && node --env-file=.env.test tests/security-services.test.js && node --env-file=.env.test tests/integration.test.js && node --env-file=.env.test tests/api-coverage.test.js",
+    "test:integration": "node --env-file=.env.test tests/integration.test.js",
+    "test:unit": "node --env-file=.env.test tests/auth.test.js && node --env-file=.env.test tests/validators.test.js && node --env-file=.env.test tests/docs.test.js && node --env-file=.env.test tests/migrations.test.js && node --env-file=.env.test tests/services.test.js && node --env-file=.env.test tests/security-services.test.js",
+    "openapi:check": "node ./src/shared/validation/check-openapi.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.22.1",
+    "nodemailer": "^8.0.5",
+    "pdfkit": "^0.18.0"
+  }
+}

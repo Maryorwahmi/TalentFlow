@@ -1,0 +1,589 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Talent Flow BE-2 Learning Core API",
+    "version": "1.0.0",
+    "description": "Versioned BE-2 learning core API covering catalog, enrollment, lessons, progress, assignments, submissions, grading, and certificates. Authentication tokens are provided by the BE-1 auth domain."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CoursePayload": {
+        "type": "object",
+        "required": ["title", "description", "modules"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+          "category": { "type": "string" },
+          "catalogVisibility": { "type": "string", "enum": ["public", "private"] },
+          "certificateEnabled": { "type": "boolean" },
+          "instructorIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title", "lessons"],
+              "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "orderIndex": { "type": "integer" },
+                "lessons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["title", "content"],
+                    "properties": {
+                      "title": { "type": "string" },
+                      "content": { "type": "string" },
+                      "contentType": { "type": "string" },
+                      "isPreview": { "type": "boolean" },
+                      "durationMinutes": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title", "description", "dueDate", "maxScore"],
+              "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "dueDate": { "type": "string", "format": "date-time" },
+                "maxScore": { "type": "number" }
+              }
+            }
+          }
+        }
+      },
+      "LessonProgressPayload": {
+        "type": "object",
+        "properties": {
+          "completed": { "type": "boolean" }
+        }
+      },
+      "GradePayload": {
+        "type": "object",
+        "required": ["score"],
+        "properties": {
+          "score": { "type": "number" },
+          "feedback": { "type": "string" },
+          "rubric": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "ApiEnvelope": {
+        "type": "object",
+        "required": ["data", "meta", "error"],
+        "properties": {
+          "data": {},
+          "meta": {
+            "type": "object",
+            "properties": {
+              "requestId": { "type": ["string", "null"] }
+            },
+            "additionalProperties": true
+          },
+          "error": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string" },
+                  "details": {}
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/public/home": {
+      "get": {
+        "summary": "Return featured public courses and landing-page stat cards",
+        "responses": {
+          "200": {
+            "description": "Public home payload returned"
+          }
+        }
+      }
+    },
+    "/courses": {
+      "get": {
+        "summary": "List published catalog courses",
+        "responses": {
+          "200": {
+            "description": "Catalog returned"
+          }
+        }
+      }
+    },
+    "/courses/{courseId}": {
+      "get": {
+        "summary": "Get course details",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course details returned"
+          }
+        }
+      }
+    },
+    "/courses/{courseId}/enroll": {
+      "post": {
+        "summary": "Enroll the authenticated learner in a course",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Enrollment created"
+          }
+        }
+      }
+    },
+    "/learner/dashboard": {
+      "get": {
+        "summary": "Return learner dashboard data",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Dashboard returned" }
+        }
+      }
+    },
+    "/learner/assignments": {
+      "get": {
+        "summary": "List all assignments across the authenticated learner's enrolled courses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Learner assignments returned" }
+        }
+      }
+    },
+    "/learner/courses": {
+      "get": {
+        "summary": "Return courses for the authenticated learner",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Learner courses returned" }
+        }
+      }
+    },
+    "/learner/progress": {
+      "get": {
+        "summary": "Return progress snapshots for the authenticated learner",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Progress snapshots returned" }
+        }
+      }
+    },
+    "/lessons/{lessonId}": {
+      "get": {
+        "summary": "Get lesson content",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "lessonId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Lesson returned" }
+        }
+      }
+    },
+    "/lessons/{lessonId}/progress": {
+      "patch": {
+        "summary": "Update learner lesson progress",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "lessonId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LessonProgressPayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Lesson progress updated" }
+        }
+      }
+    },
+    "/courses/{courseId}/assignments": {
+      "get": {
+        "summary": "List assignments for a course",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Assignments returned" }
+        }
+      }
+    },
+    "/assignments/{assignmentId}": {
+      "get": {
+        "summary": "Get assignment details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Assignment returned" }
+        }
+      }
+    },
+    "/assignments/{assignmentId}/submissions": {
+      "post": {
+        "summary": "Submit an assignment with optional text and multiple files",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "textResponse": { "type": "string" },
+                  "files": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "binary" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Submission created" }
+        }
+      }
+    },
+    "/learner/submissions/{submissionId}": {
+      "get": {
+        "summary": "Get learner submission details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Submission returned" }
+        }
+      }
+    },
+    "/submissions/{submissionId}/draft": {
+      "patch": {
+        "summary": "Save an existing learner submission as a draft",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "textResponse": { "type": "string" },
+                  "files": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "binary" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Draft submission saved" }
+        }
+      }
+    },
+    "/learner/certificates": {
+      "get": {
+        "summary": "List learner certificates",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Certificates returned" }
+        }
+      }
+    },
+    "/certificates/{certificateId}": {
+      "get": {
+        "summary": "Get certificate details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Certificate returned" }
+        }
+      }
+    },
+    "/certificates/{certificateId}/download": {
+      "get": {
+        "summary": "Download a certificate as PDF",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate PDF returned",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instructor/learners": {
+      "get": {
+        "summary": "List distinct learners across all instructor-managed courses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Instructor learners returned" }
+        }
+      }
+    },
+    "/instructor/courses": {
+      "get": {
+        "summary": "List instructor or admin courses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Instructor courses returned" }
+        }
+      },
+      "post": {
+        "summary": "Create a course with nested modules, lessons, and assignments",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CoursePayload" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Course created" }
+        }
+      }
+    },
+    "/instructor/courses/{courseId}": {
+      "get": {
+        "summary": "Get instructor course details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Instructor course returned" }
+        }
+      },
+      "patch": {
+        "summary": "Update a course, nested modules, and assignments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CoursePayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Course updated" }
+        }
+      }
+    },
+    "/instructor/courses/{courseId}/learners": {
+      "get": {
+        "summary": "List learners in a course",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Course learners returned" }
+        }
+      }
+    },
+    "/instructor/assignments/{assignmentId}/submissions": {
+      "get": {
+        "summary": "List submissions for an assignment",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Assignment submissions returned" }
+        }
+      }
+    },
+    "/instructor/submissions": {
+      "get": {
+        "summary": "List submissions across all instructor-managed courses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Instructor submissions returned" }
+        }
+      }
+    },
+    "/instructor/submissions/{submissionId}": {
+      "get": {
+        "summary": "Get instructor submission details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Submission details returned" }
+        }
+      }
+    },
+    "/instructor/submissions/{submissionId}/grade": {
+      "patch": {
+        "summary": "Grade a learner submission",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "submissionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GradePayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Submission graded" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+export const defaultDatabase = {
+  ___metadata: {
+    version: "3.0.0",
+    description: "TalentFlow MySQL-backed unified database",
+    updatedAt: new Date().toISOString()
+  },
+  roles: [],
+  users: [],
+  user_roles: [],
+  user_settings: [],
+  notification_preferences: [],
+  sessions: [],
+  refresh_tokens: [],
+  email_verification_tokens: [],
+  password_reset_tokens: [],
+  courses: [],
+  course_instructors: [],
+  course_modules: [],
+  lessons: [],
+  enrollments: [],
+  lesson_progress: [],
+  progress_snapshots: [],
+  assignments: [],
+  submissions: [],
+  submission_files: [],
+  grades: [],
+  certificates: [],
+  teams: [],
+  team_members: [],
+  team_instructors: [],
+  announcements: [],
+  announcement_recipients: [],
+  channels: [],
+  channel_members: [],
+  messages: [],
+  direct_messages: [],
+  notifications: [],
+  notification_reads: [],
+  audit_logs: [],
+  user_activity: [],
+  platform_settings: [],
+  feedback: [],
+  contact_submissions: [],
+  course_reviews: [],
+  course_reviews_aggregate: [],
+  quizzes: [],
+  quiz_questions: [],
+  quiz_attempts: []
+};
+
+export const collectionNames = Object.keys(defaultDatabase).filter(
+  (name) => name !== "___metadata"
+);
