@@ -1,0 +1,9 @@
+export { HeroSection } from './HeroSection';
+export { CourseCatalog } from './CourseCatalog';
+export { FeatureSection } from './FeatureSection';
+export { HowItWorks } from './HowItWorks';
+export { ProgrammeRoles } from './ProgrammeRoles';
+export { TestimonialsSection } from './TestimonialsSection';
+export { CTASection } from './CTASection';
+export { ContactSection } from './ContactSection';
+export { NewsLetter } from './Newsletter';

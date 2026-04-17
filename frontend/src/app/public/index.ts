@@ -1,0 +1,10 @@
+export { LandingPage } from './LandingPage';
+export { AboutPage } from './AboutPage';
+export { HowItWorksPage } from './HowItWorksPage';
+export { ContactPage } from './ContactPage';
+export { TermsPage } from './TermsPage';
+export { PrivacyPolicyPage } from './PrivacyPolicyPage';
+export { NotFound } from './NotFound';
+export { PricingPage } from './PricingPage';
+export { FAQPage } from './FAQPage';
+export { DemoPage } from './DemoPage';
